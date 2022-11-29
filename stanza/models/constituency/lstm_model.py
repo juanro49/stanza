@@ -558,6 +558,8 @@ class LSTMModel(BaseModel, nn.Module):
         self.maxout_k = self.args.get('maxout_k', 0)
         self.output_layers = self.build_output_layers(self.args['num_output_layers'], len(transitions), self.maxout_k)
 
+        self.reverse_sentence = self.args.get('reversed', False)
+
     @staticmethod
     def uses_lattn(args):
         return args.get('use_lattn', True) and args.get('lattn_d_proj', 0) > 0 and args.get('lattn_d_l', 0) > 0
@@ -678,6 +680,8 @@ class LSTMModel(BaseModel, nn.Module):
                 return idx
             return vocab_map.get(word.lower(), UNK_ID)
 
+        if self.reverse_sentence:
+            tagged_word_lists = [list(reversed(x)) for x in tagged_word_lists]
         all_word_inputs = []
         all_word_labels = [[word.children[0].label for word in tagged_words]
                            for tagged_words in tagged_word_lists]
@@ -784,6 +788,8 @@ class LSTMModel(BaseModel, nn.Module):
                                    for idx, tag_node in enumerate(tagged_words)]
                 word_queue.append(WordNode(None, self.word_zeros))
 
+            if self.reverse_sentence:
+                word_queue = list(reversed(word_queue))
             word_queues.append(word_queue)
 
         return word_queues

@@ -585,6 +585,14 @@ def train(args, model_load_file, model_save_each_file, retag_pipeline):
             silver_trees = retag_trees(silver_trees, retag_pipeline, args['retag_xpos'])
             logger.info("Retagging finished")
 
+        # reverse trees & stuff after the retagging
+        # otherwise the tagger will be confused
+        if args['reversed']:
+            logger.info("Reversing trees")
+            train_trees = [x.reverse() for x in tqdm(train_trees, postfix='Train')]
+            dev_trees = [x.reverse() for x in tqdm(dev_trees, postfix='Dev')]
+            silver_trees = [x.reverse() for x in tqdm(silver_trees, postfix='Silver')]
+
         foundation_cache = retag_pipeline[0].foundation_cache if retag_pipeline else FoundationCache()
         trainer, train_sequences, silver_sequences, train_transitions = build_trainer(args, train_trees, dev_trees, silver_trees, foundation_cache, model_load_file)
 
